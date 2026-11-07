@@ -111,3 +111,23 @@ RGB Collision版だけ、標準設定を次に変更しました。Classic版に
 - 従来条件の再現は「正規化なし」「近距離斥力：線形」です。ただし衝突検出は精度向上しているため、完全なビット単位の再現ではありません。
 
 長時間ベンチマーク `tests/long-benchmark.mjs` は複数Seedで旧力学条件と改良力学条件を比較し、各時点の近傍粒子数・平均運動エネルギー・色数・RGB変更頻度・空間占有率を出力します。力学にエネルギー保存則を導入したわけではなく、長期収束の防止も保証しません。
+
+## Classic 70,000 particle GPU backend
+
+Classic page uses a new `shared/classic-app.js` entrypoint, separate from the RGB Collision app.
+It offers automatic WebGPU, explicit WebGPU, and CPU fallback (safe limit: 3,000 particles).
+Select 1,000 / 3,000 / 10,000 / 30,000 / 50,000 / 60,000 / 70,000 particles.
+
+`shared/classic-gpu.js` runs three ordered GPU compute passes per physics step:
+1. clear spatial cell heads,
+2. build a GPU grid using `atomicExchange` linked lists,
+3. compute each particle's *directed* RGB-independent Classic force from the 9 surrounding cells, then integrate velocity and toroidally wrapped position.
+
+The grid ensures work scales with nearby particle density rather than searching all pairs across the entire world. Two GPU state buffers ping-pong, and rendering uses GPU instanced quads with no particle readback to the main thread. The shader reproduces the Classic force kernel, damping and speed cap. GPU float precision and non-associative summation order mean trajectories may differ numerically from the CPU version.
+
+To maintain approximate density as particle count increases, world width and height scale with `sqrt(count/1000)`; the *world area* therefore scales linearly with the count. The viewport is independent, with "100%" showing the whole world; use zoom and drag to inspect. This is not the same experiment as placing 70,000 particles in the old 1,000-particle-sized arena. Performance in pathological dense clustering remains workload-dependent.
+
+Browser compatibility: secure origin (GitHub Pages), WebGPU-supported browser/device, available GPU resources. If WebGPU is absent, the app limits CPU mode to 3,000 particles and informs the user. There is no guarantee of sustained 60Hz on any arbitrary device at 70,000 particles. The UI reports actual physics updates/s and frame rate. If a device cannot keep up, the simulation slows rather than building an unbounded GPU queue.
+
+Files: `shared/classic-gpu.js`, `shared/classic-camera.js`, `shared/classic-app.js`, `tests/classic-gpu.test.mjs`.
+RGB Collision uses the preexisting engine unchanged.

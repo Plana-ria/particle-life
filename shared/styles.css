@@ -41,3 +41,7 @@ canvas.zoomed:active{cursor:grabbing}
 .diagnostics{margin-top:10px}
 .diagnostics .stat-value{font-size:20px}
 .diagnostic-caption{color:var(--muted);font-size:11px;line-height:1.6;margin:8px 0 0}
+
+#backend-status{line-height:1.6;border:1px solid #305a60;padding:10px;border-radius:8px;background:#12232d;color:#8be1d2}
+#backend-status.error{background:#322029;border-color:#97566d;color:#ffbdca}
+#stat-backend{font-size:20px}

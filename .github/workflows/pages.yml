@@ -31,3 +31,6 @@ jobs:
           node --check shared/engine.js
           node --check shared/app.js
           node --check shared/camera.js
+          node --check shared/classic-camera.js
+          node --check shared/classic-gpu.js
+          node --check shared/classic-app.js

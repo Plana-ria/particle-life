@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#090e1b"><meta name="description" content="6種類の固定色と相互作用行列による、比較用の基本モデル。引力・斥力は継続して働き、色は変化しません。">
-<title>Classic Particle Life | Particle Life Lab</title><link rel="stylesheet" href="../../shared/styles.css?v=20261108-zoom-fix-1"></head>
+<title>Classic Particle Life | Particle Life Lab</title><link rel="stylesheet" href="../../shared/styles.css?v=classic-fast-1"></head>
 <body data-variant="classic" data-change-mode="swap">
 <div class="layout">
 <header><a href="../../" class="brand"><span class="logo"></span>PARTICLE LIFE LAB</a>
@@ -15,10 +15,25 @@
 <button type="button" id="zoom-in" class="camera-button" aria-label="拡大" title="拡大（＋）">＋</button>
 <button type="button" id="zoom-reset" class="camera-button camera-reset" aria-label="全体表示に戻す" title="100%に戻す（0）">100%</button>
 </div>
-<div class="viewport-badge" id="status">LIVE SIMULATION</div><div class="viewport-hint">ホイール・ピンチ：拡大縮小 / 拡大時ドラッグ：移動 / Shift＋ドラッグ：粒子を動かす</div></section>
+<div class="viewport-badge" id="status">LIVE SIMULATION</div><div class="viewport-hint">100%：全体表示 / ホイール・ピンチ：拡大縮小 / 拡大時ドラッグ：移動</div></section>
 <aside class="controls"><div class="section-title">シミュレーション設定</div>
 <div class="button-row"><button type="button" class="btn primary" id="toggle">❚❚ 一時停止</button><button type="button" class="btn" id="reset">↻ 同じSeedで再開</button></div>
-<div class="control"><label for="count">粒子数 <output data-value="count">1,000</output></label><input id="count" data-option="count" type="range" min="200" max="2400" step="200" value="1000"></div>
+<div class="control"><label for="backend">計算エンジン</label><select id="backend">
+<option value="auto" selected>自動（WebGPU優先）</option>
+<option value="gpu">WebGPU（大規模粒子向け）</option>
+<option value="cpu">CPU（最大3,000粒子）</option>
+</select></div>
+<div class="control"><label for="count">粒子数 <output data-value="count">1,000</output></label>
+<select id="count" data-option="count">
+<option value="1000" selected>1,000</option>
+<option value="3000">3,000</option>
+<option value="10000">10,000</option>
+<option value="30000">30,000</option>
+<option value="50000">50,000</option>
+<option value="60000">60,000</option>
+<option value="70000">70,000</option>
+</select></div>
+<p class="note" id="backend-status" role="status">計算エンジンを準備しています…</p>
 <div class="control" data-collision-only><label for="levels">RGB段階数 <output data-value="levels">4</output></label><select id="levels" data-option="levels"><option value="3">3段階 / 27色</option><option value="4" selected>4段階 / 64色</option><option value="8">8段階 / 512色</option><option value="16">16段階 / 4,096色</option></select></div>
 <div class="control"><label for="interactionRadius">引力・斥力の作用半径 <output data-value="interactionRadius">76</output></label><input id="interactionRadius" data-option="interactionRadius" type="range" min="40" max="130" step="2" value="76"></div>
 <div class="control"><label for="force">引力・斥力の強さ <output data-value="force">0.18</output></label><input id="force" data-option="force" type="range" min="0.02" max="0.60" step="0.02" value="0.18"></div>
@@ -30,16 +45,16 @@
 <div class="checkline" data-collision-only><label for="glow">特殊RGBの発光</label><input id="glow" data-option="glow" type="checkbox" checked></div>
 <div class="control"><label for="seed">乱数Seed</label><input id="seed" type="number" value="42" step="1"></div>
 <button type="button" class="btn" id="randomize" style="width:100%">新しいSeedで再生成</button>
-<p class="note">調整はすぐに反映されます。粒子数・RGB段階数・Seedの変更時だけ初期化します。数値は実験用の無次元設定です。</p>
+<p class="note">調整はすぐに反映されます。粒子数・作用半径・Seed・計算エンジンの変更時に再初期化します。粒子数に応じてワールド面積を広げ、密度を概ね一定にします。GPUの速度は機種によって変わります。</p>
 </aside></div>
 <div class="stats" aria-live="off">
-<div class="stat"><div class="stat-label">出現色数</div><div class="stat-value" id="stat-colors">—</div></div>
-<div class="stat"><div class="stat-label" id="stat-events-label">RGB変化回数</div><div class="stat-value" id="stat-events">—</div></div>
-<div class="stat"><div class="stat-label">平均速度</div><div class="stat-value" id="stat-speed">—</div></div>
+<div class="stat"><div class="stat-label">粒子数</div><div class="stat-value" id="stat-count">—</div></div>
+<div class="stat"><div class="stat-label">計算方式</div><div class="stat-value" id="stat-backend">—</div></div>
+<div class="stat"><div class="stat-label">物理更新 / 秒</div><div class="stat-value" id="stat-steps">—</div></div>
 <div class="stat"><div class="stat-label">描画FPS</div><div class="stat-value" id="stat-fps">—</div></div>
-</div><section class="explainer"><h2>基本ルール</h2><p>6種の粒子に対し、非対称な引力・斥力行列を固定します。近距離では共通の反発力、少し離れると種類の組み合わせによる引力・斥力が働きます。粒子は減衰付きの速度を持ち、画面端では反対側につながります。このページでは色は変化しません。</p></section></main>
+</div><section class="explainer"><h2>GPU高速化したClassic</h2><p>WebGPUを利用できる端末では、GPU上の空間グリッドと並列計算・インスタンス描画を利用します。全体表示（100%）から拡大すると広大なワールドの各エリアを観察できます。GPUが使えない場合はCPUに切り替わり、最大3,000粒子に制限されます。高粒子数の処理速度はGPUの性能と粒子の局所密度に依存し、60FPSは保証されません。</p><h2>基本ルール</h2><p>6種の粒子に対し、非対称な引力・斥力行列を固定します。近距離では共通の反発力、少し離れると種類の組み合わせによる引力・斥力が働きます。粒子は減衰付きの速度を持ち、画面端では反対側につながります。このページでは色は変化しません。</p></section></main>
 <footer class="footer">Particle Life Lab · <a class="inline-link" href="../../">他のルールを見る</a> · <a class="inline-link" href="https://github.com/Plana-ria/particle-life">Source on GitHub</a></footer>
-</div><script type="module" src="../../shared/app.js?v=20261108-zoom-fix-1"></script><script>
+</div><script type="module" src="../../shared/classic-app.js?v=classic-fast-1"></script><script>
 window.addEventListener('error', event => {
   if (event.target && event.target.tagName === 'SCRIPT') {
     const status = document.getElementById('status');
