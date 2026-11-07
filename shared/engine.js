@@ -46,7 +46,8 @@ export const DEFAULTS = Object.freeze({
   count: 1000, levels: 4, seed: 42, interactionRadius: 76,
   collisionRadius: 9, threshold: 0.9, force: 0.18,
   damping: 0.965, repel: 0.63, maxSpeed: 7,
-  changeMode: 'swap', trails: false, glow: true
+  changeMode: 'swap', trails: false, glow: true,
+  rgbMutationEnabled: true, forceNormalization: 'none'
 });
 
 export class ParticleLife {
@@ -84,6 +85,7 @@ export class ParticleLife {
     this.collisions = 0;
     this.mutations = 0;
     this.frame = 0;
+    this.neighborCounts = new Uint16Array(this.n);
     const random = rng(c.seed);
     for (let i = 0; i < this.n; i++) {
       this.x[i] = random() * this.width;
@@ -205,11 +207,14 @@ export class ParticleLife {
     const minDist = Math.min(radius * .35, Math.max(hit * 1.15, 11));
     const oldX = this.x.slice(), oldY = this.y.slice();
     this.ax.fill(0); this.ay.fill(0);
+    this.neighborCounts.fill(0);
     this.forPairs((i, j) => {
       const dx = delta(this.x[j] - this.x[i], this.width);
       const dy = delta(this.y[j] - this.y[i], this.height);
       const d2 = dx * dx + dy * dy;
       if (d2 >= radius * radius || d2 < .0001) return;
+      this.neighborCounts[i]++;
+      this.neighborCounts[j]++;
       const d = Math.sqrt(d2), ux = dx / d, uy = dy / d;
       const repelForce = -repel * (1 - d / minDist);
       const kernel = Math.sin(Math.PI * clamp((d - minDist) / (radius - minDist), 0, 1));
@@ -218,6 +223,17 @@ export class ParticleLife {
       this.ax[i] += ux * fi; this.ay[i] += uy * fi;
       this.ax[j] -= ux * fj; this.ay[j] -= uy * fj;
     });
+    // Optional density-normalized force: keep the unnormalized baseline
+    // available for direct comparisons with the same initial seed.
+    const normalize = this.options.forceNormalization;
+    if (normalize === 'sqrt' || normalize === 'mean') {
+      for (let i = 0; i < this.n; i++) {
+        const count = Math.max(1, this.neighborCounts[i]);
+        const divisor = normalize === 'sqrt' ? Math.sqrt(count) : count;
+        this.ax[i] /= divisor;
+        this.ay[i] /= divisor;
+      }
+    }
     const fade = Math.pow(damping, h);
     for (let i = 0; i < this.n; i++) {
       let vx = (this.vx[i] + this.ax[i] * h) * fade;
@@ -247,7 +263,7 @@ export class ParticleLife {
               this.collisions++;
               // Equal masses: reduced-mass energy = approach^2 / 4.
               const energy = approach * approach / 4;
-              if (energy >= threshold && this.mutate(i, j)) this.mutations++;
+              if (this.options.rgbMutationEnabled && energy >= threshold && this.mutate(i, j)) this.mutations++;
             }
           }
           nextContacts.add(key);
@@ -273,16 +289,29 @@ export class ParticleLife {
     }
   }
   stats() {
-    let sumSpeed = 0, colors = new Set();
+    let sumSpeed = 0, kineticEnergy = 0, capped = 0;
+    let sumNeighbors = 0, maxNeighbors = 0;
+    const maxSpeed = this.options.maxSpeed;
+    let colors = new Set();
     for (let i = 0; i < this.n; i++) {
-      sumSpeed += Math.hypot(this.vx[i], this.vy[i]);
+      const speedSquared = this.vx[i] ** 2 + this.vy[i] ** 2;
+      sumSpeed += Math.sqrt(speedSquared);
+      kineticEnergy += speedSquared / 2;
+      if (speedSquared >= (maxSpeed - 1e-3) ** 2) capped++;
+      const neighbors = this.neighborCounts[i];
+      sumNeighbors += neighbors;
+      if (neighbors > maxNeighbors) maxNeighbors = neighbors;
       colors.add(this.variant === 'classic'
         ? this.species[i]
         : this.r[i] * 65536 + this.g[i] * 256 + this.b[i]);
     }
     return {
       colors: colors.size, collisions: this.collisions, mutations: this.mutations,
-      averageSpeed: sumSpeed / this.n, steps: this.frame
+      averageSpeed: sumSpeed / this.n,
+      meanKineticEnergy: kineticEnergy / this.n,
+      meanNeighbors: sumNeighbors / this.n,
+      maxNeighbors, speedCapPercentage: 100 * capped / this.n,
+      steps: this.frame
     };
   }
   draw(ctx, { background = true } = {}) {

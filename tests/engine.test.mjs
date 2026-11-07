@@ -85,3 +85,38 @@ test('nonlinear affinities include positive and negative responses for every RGB
     assert.ok(samples.some(x => x < -.1), 'no repulsive pair: ' + levels);
   }
 });
+
+test('RGB mutation can be disabled while maintaining collisions', () => {
+  const p = pair(0);
+  p.options.rgbMutationEnabled = false;
+  for (let k = 0; k < 3; k++) p.step();
+  assert.equal(p.collisions, 1);
+  assert.equal(p.mutations, 0);
+});
+test('density normalization changes acceleration without changing RGB or initial geometry', () => {
+  const configs = ['none', 'sqrt', 'mean'];
+  const systems = configs.map(forceNormalization => new ParticleLife(220, 140, 'collision', {
+    count: 4, seed: 7, force: 0.8, damping: 1, repel: 0.6,
+    interactionRadius: 90, forceNormalization, rgbMutationEnabled: false
+  }));
+  for (const p of systems) {
+    p.x.set([45, 60, 75, 88]); p.y.set([60, 68, 60, 65]);
+    p.vx.fill(0); p.vy.fill(0);
+    p.step();
+    assert.ok(p.neighborCounts.every(n => n === 3));
+  }
+  for (const i of [1,2]) assert.deepEqual([...systems[0].r], [...systems[i].r]);
+  const magnitude = p => Math.hypot(p.vx[0], p.vy[0]);
+  assert.ok(magnitude(systems[0]) > magnitude(systems[1]));
+  assert.ok(magnitude(systems[1]) > magnitude(systems[2]));
+});
+test('diagnostics report kinetic energy, neighbors and speed cap', () => {
+  const p = new ParticleLife(200, 200, 'collision', {count:2, maxSpeed:5, interactionRadius:50});
+  p.x.set([10, 30]); p.y.set([10, 10]); p.vx.set([5, 0]); p.vy.fill(0);
+  p.neighborCounts.set([1, 1]);
+  const s=p.stats();
+  assert.ok(Math.abs(s.meanKineticEnergy-6.25)<1e-6);
+  assert.equal(s.meanNeighbors,1);
+  assert.equal(s.maxNeighbors,1);
+  assert.equal(s.speedCapPercentage,50);
+});

@@ -1,4 +1,4 @@
-import { ParticleLife, DEFAULTS } from './engine.js?v=20261108-rgb-nonlinear-1';
+import { ParticleLife, DEFAULTS } from './engine.js?v=20261108-diagnostics-1';
 import { Camera } from './camera.js?v=20261108-zoom-fix-1';
 
 const canvas = document.getElementById('world');
@@ -59,7 +59,7 @@ const format = (key, value) => {
 function readOptions() {
   for (const node of document.querySelectorAll('[data-option]')) {
     const key = node.dataset.option;
-    options[key] = node.type === 'checkbox' ? node.checked : Number(node.value);
+    options[key] = node.type === 'checkbox' ? node.checked : node.tagName === 'SELECT' && key === 'forceNormalization' ? node.value : Number(node.value);
     const label = document.querySelector('[data-value="' + key + '"]');
     if (label) label.textContent = format(key, options[key]);
   }
@@ -74,6 +74,7 @@ for (const node of document.querySelectorAll('[data-option]')) {
     if (previousCount !== options.count || previousLevels !== options.levels) {
       sim.reset(options);
       accumulator = 0;
+      previousDiagnosticSteps = 0; previousDiagnosticMutations = 0;
     }
     if (paused) render(true);
   });
@@ -85,7 +86,7 @@ function setPaused(value) {
   status.textContent = paused ? 'PAUSED' : 'LIVE SIMULATION';
 }
 $('toggle').addEventListener('click', () => setPaused(!paused));
-$('reset').addEventListener('click', () => { sim.reset(options); accumulator = 0; if (paused) render(true); });
+$('reset').addEventListener('click', () => { sim.reset(options); accumulator = 0; previousDiagnosticSteps = 0; previousDiagnosticMutations = 0; if (paused) render(true); });
 $('randomize').addEventListener('click', () => {
   options.seed = Math.floor(Math.random() * 2147483647);
   $('seed').value = String(options.seed);
@@ -204,6 +205,7 @@ document.addEventListener('keydown', event => {
   }
 });
 
+let previousDiagnosticSteps = 0, previousDiagnosticMutations = 0, mutationRate = 0;
 function updateStats() {
   const s = sim.stats();
   $('stat-colors').textContent = String(s.colors);
@@ -212,6 +214,17 @@ function updateStats() {
   $('stat-fps').textContent = String(Math.round(fps));
   $('stat-events-label').textContent = variant === 'classic' ? '色の変化回数' : 'RGB変化回数';
   $('stat-fps').title = 'ブラウザ描画フレーム/秒';
+  if (variant === 'collision') {
+    $('stat-energy').textContent = s.meanKineticEnergy.toFixed(2);
+    $('stat-density').textContent = s.meanNeighbors.toFixed(1) + ' / ' + String(s.maxNeighbors);
+    $('stat-cap').textContent = s.speedCapPercentage.toFixed(1) + '%';
+    const elapsedSteps = Math.max(1, s.steps - previousDiagnosticSteps);
+    const mutationDelta = Math.max(0, s.mutations - previousDiagnosticMutations);
+    mutationRate = s.steps === 0 ? 0 : mutationDelta / elapsedSteps * 60;
+    $('stat-mutation-rate').textContent = mutationRate.toFixed(1) + '/秒';
+    previousDiagnosticSteps = s.steps;
+    previousDiagnosticMutations = s.mutations;
+  }
 }
 function tick(now) {
   if (!lastTime) lastTime = now;

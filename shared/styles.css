@@ -36,3 +36,8 @@ canvas.zoomed:active{cursor:grabbing}
 .viewport-badge{top:59px;left:10px}
 .viewport-hint{max-width:calc(100% - 20px);font-size:10px;line-height:1.5}
 }
+
+.diagnostic-heading{border-top:1px solid var(--border);padding-top:18px;margin-top:16px}
+.diagnostics{margin-top:10px}
+.diagnostics .stat-value{font-size:20px}
+.diagnostic-caption{color:var(--muted);font-size:11px;line-height:1.6;margin:8px 0 0}
