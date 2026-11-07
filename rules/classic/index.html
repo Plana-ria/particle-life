@@ -9,7 +9,13 @@
 <main><div class="eyebrow">BASELINE / FIXED SPECIES</div><h1 class="heading">Classic Particle Life</h1><p class="lead">6種類の固定色と相互作用行列による、比較用の基本モデル。引力・斥力は継続して働き、色は変化しません。</p>
 <div class="sim-layout">
 <section class="viewport" aria-label="粒子シミュレーション"><canvas id="world" aria-label="Particle Life シミュレーション"></canvas>
-<div class="viewport-badge" id="status">LIVE SIMULATION</div><div class="viewport-hint">クリック・ドラッグで粒子を動かす / Space: 一時停止 / R: リセット</div></section>
+<div class="camera-toolbar" role="group" aria-label="表示の拡大縮小">
+<button type="button" id="zoom-out" class="camera-button" aria-label="縮小" title="縮小（−）">−</button>
+<output id="zoom-value" class="camera-level" aria-live="off">100%</output>
+<button type="button" id="zoom-in" class="camera-button" aria-label="拡大" title="拡大（＋）">＋</button>
+<button type="button" id="zoom-reset" class="camera-button camera-reset" aria-label="全体表示に戻す" title="100%に戻す（0）">100%</button>
+</div>
+<div class="viewport-badge" id="status">LIVE SIMULATION</div><div class="viewport-hint">ホイール・ピンチ：拡大縮小 / 拡大時ドラッグ：移動 / Shift＋ドラッグ：粒子を動かす</div></section>
 <aside class="controls"><div class="section-title">シミュレーション設定</div>
 <div class="button-row"><button type="button" class="btn primary" id="toggle">❚❚ 一時停止</button><button type="button" class="btn" id="reset">↻ 同じSeedで再開</button></div>
 <div class="control"><label for="count">粒子数 <output data-value="count">1,000</output></label><input id="count" data-option="count" type="range" min="200" max="2400" step="200" value="1000"></div>

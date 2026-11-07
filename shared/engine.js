@@ -269,15 +269,12 @@ export class ParticleLife {
       averageSpeed: sumSpeed / this.n, steps: this.frame
     };
   }
-  draw(ctx) {
+  draw(ctx, { background = true } = {}) {
     const { width: w, height: h } = this;
-    const trails = this.options.trails;
-    if (trails) {
-      ctx.fillStyle = 'rgba(6, 10, 22, 0.22)';
-    } else {
-      ctx.fillStyle = '#060a16';
+    if (background) {
+      ctx.fillStyle = this.options.trails ? 'rgba(6, 10, 22, 0.22)' : '#060a16';
+      ctx.fillRect(0, 0, w, h);
     }
-    ctx.fillRect(0, 0, w, h);
     const max = this.options.levels - 1, glow = this.options.glow;
     for (let i = 0; i < this.n; i++) {
       const color = this.color(i);
