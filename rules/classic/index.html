@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#090e1b"><meta name="description" content="6種類の固定色と相互作用行列による、比較用の基本モデル。引力・斥力は継続して働き、色は変化しません。">
+<title>Classic Particle Life | Particle Life Lab</title><link rel="stylesheet" href="../../shared/styles.css"></head>
+<body data-variant="classic" data-change-mode="swap">
+<div class="layout">
+<header><a href="../../" class="brand"><span class="logo"></span>PARTICLE LIFE LAB</a>
+<nav class="nav"><a href="../../">実験一覧</a><a href="../classic/">Classic</a><a href="../rgb-collision/">RGB Collision</a><a href="https://github.com/Plana-ria/particle-life">GitHub</a></nav></header>
+<main><div class="eyebrow">BASELINE / FIXED SPECIES</div><h1 class="heading">Classic Particle Life</h1><p class="lead">6種類の固定色と相互作用行列による、比較用の基本モデル。引力・斥力は継続して働き、色は変化しません。</p>
+<div class="sim-layout">
+<section class="viewport" aria-label="粒子シミュレーション"><canvas id="world" aria-label="Particle Life シミュレーション"></canvas>
+<div class="viewport-badge" id="status">LIVE SIMULATION</div><div class="viewport-hint">クリック・ドラッグで粒子を動かす / Space: 一時停止 / R: リセット</div></section>
+<aside class="controls"><div class="section-title">シミュレーション設定</div>
+<div class="button-row"><button type="button" class="btn primary" id="toggle">❚❚ 一時停止</button><button type="button" class="btn" id="reset">↻ 同じSeedで再開</button></div>
+<div class="control"><label for="count">粒子数 <output data-value="count">1,000</output></label><input id="count" data-option="count" type="range" min="200" max="2400" step="200" value="1000"></div>
+<div class="control" data-collision-only><label for="levels">RGB段階数 <output data-value="levels">4</output></label><select id="levels" data-option="levels"><option value="3">3段階 / 27色</option><option value="4" selected>4段階 / 64色</option><option value="8">8段階 / 512色</option><option value="16">16段階 / 4,096色</option></select></div>
+<div class="control"><label for="interactionRadius">引力・斥力の作用半径 <output data-value="interactionRadius">76</output></label><input id="interactionRadius" data-option="interactionRadius" type="range" min="40" max="130" step="2" value="76"></div>
+<div class="control"><label for="force">引力・斥力の強さ <output data-value="force">0.18</output></label><input id="force" data-option="force" type="range" min="0.02" max="0.60" step="0.02" value="0.18"></div>
+<div class="control"><label for="damping">速度減衰係数 <output data-value="damping">0.965</output></label><input id="damping" data-option="damping" type="range" min="0.900" max="0.995" step="0.005" value="0.965"></div>
+<div class="control" data-collision-only><label for="collisionRadius">衝突半径 <output data-value="collisionRadius">9</output></label><input id="collisionRadius" data-option="collisionRadius" type="range" min="5" max="18" step="1" value="9"></div>
+<div class="control" data-collision-only><label for="threshold">RGB変化のエネルギー閾値 <output data-value="threshold">0.90</output></label><input id="threshold" data-option="threshold" type="range" min="0" max="12" step="0.1" value="0.9"></div>
+<div class="control"><label for="maxSpeed">最大速度 <output data-value="maxSpeed">7</output></label><input id="maxSpeed" data-option="maxSpeed" type="range" min="2" max="12" step="1" value="7"></div>
+<div class="checkline"><label for="trails">残像を描画</label><input id="trails" data-option="trails" type="checkbox"></div>
+<div class="checkline" data-collision-only><label for="glow">特殊RGBの発光</label><input id="glow" data-option="glow" type="checkbox" checked></div>
+<div class="control"><label for="seed">乱数Seed</label><input id="seed" type="number" value="42" step="1"></div>
+<button type="button" class="btn" id="randomize" style="width:100%">新しいSeedで再生成</button>
+<p class="note">調整はすぐに反映されます。粒子数・RGB段階数・Seedの変更時だけ初期化します。数値は実験用の無次元設定です。</p>
+</aside></div>
+<div class="stats" aria-live="off">
+<div class="stat"><div class="stat-label">出現色数</div><div class="stat-value" id="stat-colors">—</div></div>
+<div class="stat"><div class="stat-label" id="stat-events-label">RGB変化回数</div><div class="stat-value" id="stat-events">—</div></div>
+<div class="stat"><div class="stat-label">平均速度</div><div class="stat-value" id="stat-speed">—</div></div>
+<div class="stat"><div class="stat-label">描画FPS</div><div class="stat-value" id="stat-fps">—</div></div>
+</div><section class="explainer"><h2>基本ルール</h2><p>6種の粒子に対し、非対称な引力・斥力行列を固定します。近距離では共通の反発力、少し離れると種類の組み合わせによる引力・斥力が働きます。粒子は減衰付きの速度を持ち、画面端では反対側につながります。このページでは色は変化しません。</p></section></main>
+<footer class="footer">Particle Life Lab · <a class="inline-link" href="../../">他のルールを見る</a> · <a class="inline-link" href="https://github.com/Plana-ria/particle-life">Source on GitHub</a></footer>
+</div><script type="module" src="../../shared/app.js"></script></body></html>

@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#090e1b">
+<meta name="description" content="異なるParticle Lifeルールを独立したページで試せる実験室。">
+<title>Particle Life Lab | 粒子の創発シミュレーション</title><link rel="stylesheet" href="./shared/styles.css"></head><body>
+<div class="layout"><header><a href="./" class="brand"><span class="logo"></span>PARTICLE LIFE LAB</a>
+<nav class="nav"><a href="./rules/classic/">Classic</a><a href="./rules/rgb-collision/">RGB Collision</a><a href="https://github.com/Plana-ria/particle-life">GitHub</a></nav></header>
+<main><section class="home-hero"><div class="eyebrow">AN INTERACTIVE ARTIFICIAL LIFE LAB</div>
+<h1 class="heading">Simple rules.<br>Unexpected life.</h1>
+<p class="lead">単純な引力・斥力から、群れ・輪・動く構造が生まれるParticle Life。ルールごとに独立した実験ページを用意しました。粒子の色や衝突条件を調整して、創発する動きを観察できます。</p></section>
+<section class="cards" aria-label="実験ページ">
+<a class="card" href="./rules/classic/"><div class="tag">BASELINE · 01</div><h2>Classic Particle Life</h2>
+<p>6種類の固定色と非対称な引力・斥力のルールによる基本モデル。比較実験の基準として、色を変化させずに集団形成を観察します。</p><span class="arrow">↗</span></a>
+<a class="card" href="./rules/rgb-collision/"><div class="tag">EXPERIMENT · 02</div><h2>RGB Collision Life</h2>
+<p>RGBを各4段階・64色で開始。粒子同士の衝突時、接近方向の相対運動エネルギーに応じてRGBが変化します。RGBは運動ルールそのものにも反映されます。</p><span class="arrow">↗</span></a>
+</section><section class="explainer"><h2>独立したルール、共有するエンジン</h2>
+<p>各実験は <code>rules/&lt;rule-name&gt;/</code> にあり、描画と基本物理は <code>shared/</code> にまとめています。新しいルールを追加しても、既存の実験ページに影響しにくい構造です。すべてブラウザ上で動作し、外部サービスやログインは不要です。</p></section></main>
+<footer class="footer">Open-source experiments · <a class="inline-link" href="https://github.com/Plana-ria/particle-life">GitHub: Plana-ria/particle-life</a></footer>
+</div></body></html>
