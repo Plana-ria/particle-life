@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#090e1b"><meta name="description" content="6種類の固定色と相互作用行列による、比較用の基本モデル。引力・斥力は継続して働き、色は変化しません。">
-<title>Classic Particle Life | Particle Life Lab</title><link rel="stylesheet" href="../../shared/styles.css"></head>
+<title>Classic Particle Life | Particle Life Lab</title><link rel="stylesheet" href="../../shared/styles.css?v=20261108-zoom-fix-1"></head>
 <body data-variant="classic" data-change-mode="swap">
 <div class="layout">
 <header><a href="../../" class="brand"><span class="logo"></span>PARTICLE LIFE LAB</a>
@@ -39,4 +39,11 @@
 <div class="stat"><div class="stat-label">描画FPS</div><div class="stat-value" id="stat-fps">—</div></div>
 </div><section class="explainer"><h2>基本ルール</h2><p>6種の粒子に対し、非対称な引力・斥力行列を固定します。近距離では共通の反発力、少し離れると種類の組み合わせによる引力・斥力が働きます。粒子は減衰付きの速度を持ち、画面端では反対側につながります。このページでは色は変化しません。</p></section></main>
 <footer class="footer">Particle Life Lab · <a class="inline-link" href="../../">他のルールを見る</a> · <a class="inline-link" href="https://github.com/Plana-ria/particle-life">Source on GitHub</a></footer>
-</div><script type="module" src="../../shared/app.js"></script></body></html>
+</div><script type="module" src="../../shared/app.js?v=20261108-zoom-fix-1"></script><script>
+window.addEventListener('error', event => {
+  if (event.target && event.target.tagName === 'SCRIPT') {
+    const status = document.getElementById('status');
+    if (status) status.textContent = '読み込みに失敗しました。再読み込みしてください';
+  }
+}, true);
+</script></body></html>

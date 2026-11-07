@@ -1,5 +1,5 @@
-import { ParticleLife, DEFAULTS } from './engine.js';
-import { Camera } from './camera.js';
+import { ParticleLife, DEFAULTS } from './engine.js?v=20261108-zoom-fix-1';
+import { Camera } from './camera.js?v=20261108-zoom-fix-1';
 
 const canvas = document.getElementById('world');
 const context = canvas.getContext('2d', { alpha: false });
