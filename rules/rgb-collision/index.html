@@ -31,10 +31,15 @@
 <div class="section-title diagnostic-heading">収束原因の比較実験</div>
 <div class="checkline"><label for="rgbMutationEnabled">衝突時のRGB変化を有効化</label><input id="rgbMutationEnabled" data-option="rgbMutationEnabled" type="checkbox" checked></div>
 <div class="control"><label for="repel">近距離の斥力 <output data-value="repel">0.63</output></label><input id="repel" data-option="repel" type="range" min="0.1" max="3" step="0.05" value="0.63"></div>
+<div class="control"><label for="repulsionProfile">近距離斥力の距離特性</label>
+<select id="repulsionProfile" data-option="repulsionProfile">
+<option value="steep" selected>接近時に強く反発（改良）</option>
+<option value="linear">線形（従来の比較用）</option>
+</select></div>
 <div class="control"><label for="forceNormalization">合力の正規化</label>
 <select id="forceNormalization" data-option="forceNormalization">
-<option value="none" selected>なし（従来と同じ）</option>
-<option value="sqrt">近傍数の平方根で割る</option>
+<option value="none">なし（従来と同じ）</option>
+<option value="sqrt" selected>近傍数の平方根で割る（推奨）</option>
 <option value="mean">近傍数で割る（平均）</option>
 </select></div>
 <p class="note">比較する際は同じSeed・粒子数・RGB段階数で「同じSeedで再開」を押してください。比較実験は物理法則の再現ではなく原因切り分けです。</p>
@@ -53,9 +58,9 @@
 <div class="stat"><div class="stat-label">速度上限到達率</div><div class="stat-value" id="stat-cap">—</div></div>
 <div class="stat"><div class="stat-label">RGB変化頻度 (直近区間)</div><div class="stat-value" id="stat-mutation-rate">—</div></div>
 </div>
-<p class="diagnostic-caption">近傍粒子数は「作用半径内の粒子数」です。密集度の指標であり、面積あたりの密度ではありません。値は約0.5秒間隔で更新されます。</p><section class="explainer"><h2>RGB衝突ルール</h2><p>粒子の色は内部的に <code>(R,G,B) ∈ {0,1,2,3}³</code>（初期設定）として保持し、表示時のみ0〜255へ変換します。同じRGBなら相互作用関数も同じです。現在はRGB成分間の周期的な非線形関数で引力・斥力を計算します。関数自体は時間で変化しません。</p><p>衝突半径への新規進入で接近速度 <code>u = max(0, (前フレーム距離 − 現在距離) / Δt)</code> を求め、等質量の換算質量で <code>E = u² / 4</code> と定義します。<code>E ≥ 閾値</code> のときだけ、2粒子のRGBから決まる1成分を交換します。接触中は再発火せず、1.55倍の距離まで離れると再判定可能になります。</p><p>成分交換は粒子全体でR・G・Bそれぞれの値の分布を保存し、単純な色の平均化や一方向の白化を防ぎます。発光は見た目のみで、運動や衝突には影響しません。</p></section></main>
+<p class="diagnostic-caption">近傍粒子数は「作用半径内の粒子数」です。密集度の指標であり、面積あたりの密度ではありません。値は約0.5秒間隔で更新されます。</p><section class="explainer"><h2>RGB衝突ルール</h2><p>粒子の色は内部的に <code>(R,G,B) ∈ {0,1,2,3}³</code>（初期設定）として保持し、表示時のみ0〜255へ変換します。同じRGBなら相互作用関数も同じです。現在はRGB成分間の周期的な非線形関数で引力・斥力を計算します。関数自体は時間で変化しません。</p><p>衝突半径への新規進入（1ステップ中に通過した場合も含む）で、接近方向への相対速度 <code>u = max(0, −v_rel・r̂)</code> を求め、等質量の換算質量で <code>E = u² / 4</code> と定義します。<code>E ≥ 閾値</code> のときだけ、2粒子のRGBから決まる1成分を交換します。接触中は再発火せず、1.55倍の距離まで離れると再判定可能になります。</p><p>成分交換は粒子全体でR・G・Bそれぞれの値の分布を保存し、単純な色の平均化や一方向の白化を防ぎます。発光は見た目のみで、運動や衝突には影響しません。</p></section></main>
 <footer class="footer">Particle Life Lab · <a class="inline-link" href="../../">他のルールを見る</a> · <a class="inline-link" href="https://github.com/Plana-ria/particle-life">Source on GitHub</a></footer>
-</div><script type="module" src="../../shared/app.js?v=20261108-diagnostics-1"></script><script>
+</div><script type="module" src="../../shared/app.js?v=20261108-physics-v2"></script><script>
 window.addEventListener('error', event => {
   if (event.target && event.target.tagName === 'SCRIPT') {
     const status = document.getElementById('status');

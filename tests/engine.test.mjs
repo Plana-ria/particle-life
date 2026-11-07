@@ -120,3 +120,50 @@ test('diagnostics report kinetic energy, neighbors and speed cap', () => {
   assert.equal(s.maxNeighbors,1);
   assert.equal(s.speedCapPercentage,50);
 });
+
+test('RGB defaults to density normalization and hardened repulsion; classic keeps original physics', () => {
+  const rgb = new ParticleLife(200, 200, 'collision', {count: 3});
+  const classic = new ParticleLife(200, 200, 'classic', {count: 3});
+  assert.equal(rgb.options.forceNormalization, 'sqrt');
+  assert.equal(rgb.options.repulsionProfile, 'steep');
+  assert.equal(classic.options.forceNormalization, 'none');
+  assert.equal(classic.options.repulsionProfile, 'linear');
+});
+test('hardening produces stronger near-contact repulsion than linear at identical settings', () => {
+  const make = profile => new ParticleLife(300, 300, 'collision', {
+    count:2, force:0, repel:0.63, damping:1, maxSpeed:100,
+    forceNormalization:'none', repulsionProfile:profile,
+    interactionRadius:80, collisionRadius:5
+  });
+  const linear=make('linear'), steep=make('steep');
+  for (const p of [linear,steep]) {
+    p.x.set([80,87]); p.y.set([90,90]);p.vx.fill(0);p.vy.fill(0);
+    p.step();
+  }
+  assert.ok(Math.abs(steep.vx[0]) > Math.abs(linear.vx[0]));
+});
+test('swept collision catches high-speed pass through the entire interaction zone', () => {
+  const p = new ParticleLife(300,200,'collision',{
+    count:2,force:0,repel:0,damping:1,maxSpeed:100,
+    interactionRadius:80, collisionRadius:9, threshold:0,
+    forceNormalization:'none',repulsionProfile:'linear'
+  });
+  p.x.set([90, 120]);p.y.set([100,100]);
+  p.vx.set([20,-20]);p.vy.fill(0);
+  p.r.set([0,3]);p.g.set([0,3]);p.b.set([0,3]);
+  p.step();
+  assert.equal(p.collisions,1);
+  assert.equal(p.mutations,1);
+});
+test('tangential near miss has no collision and zero mutation', () => {
+  const p = new ParticleLife(300,200,'collision',{
+    count:2,force:0,repel:0,damping:1,maxSpeed:100,
+    interactionRadius:80, collisionRadius:9, threshold:0,
+    forceNormalization:'none'
+  });
+  p.x.set([90,120]);p.y.set([100,111]);
+  p.vx.set([20,-20]);p.vy.fill(0);
+  p.step();
+  assert.equal(p.collisions,0);
+  assert.equal(p.mutations,0);
+});

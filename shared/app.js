@@ -1,4 +1,4 @@
-import { ParticleLife, DEFAULTS } from './engine.js?v=20261108-diagnostics-1';
+import { ParticleLife, DEFAULTS } from './engine.js?v=20261108-physics-v2';
 import { Camera } from './camera.js?v=20261108-zoom-fix-1';
 
 const canvas = document.getElementById('world');
@@ -6,7 +6,9 @@ const context = canvas.getContext('2d', { alpha: false });
 const variant = document.body.dataset.variant === 'classic' ? 'classic' : 'collision';
 const status = document.getElementById('status');
 const $ = id => document.getElementById(id);
-const options = { ...DEFAULTS, changeMode: document.body.dataset.changeMode || 'swap' };
+const options = { ...DEFAULTS,
+  ...(variant === 'classic' ? { forceNormalization: 'none', repulsionProfile: 'linear' } : {}),
+  changeMode: document.body.dataset.changeMode || 'swap' };
 let sim, camera, paused = false, lastTime = 0, accumulator = 0;
 let lastStats = 0, frames = 0, fps = 0, dpr = 1;
 
@@ -59,7 +61,7 @@ const format = (key, value) => {
 function readOptions() {
   for (const node of document.querySelectorAll('[data-option]')) {
     const key = node.dataset.option;
-    options[key] = node.type === 'checkbox' ? node.checked : node.tagName === 'SELECT' && key === 'forceNormalization' ? node.value : Number(node.value);
+    options[key] = node.type === 'checkbox' ? node.checked : node.tagName === 'SELECT' && (key === 'forceNormalization' || key === 'repulsionProfile') ? node.value : Number(node.value);
     const label = document.querySelector('[data-value="' + key + '"]');
     if (label) label.textContent = format(key, options[key]);
   }

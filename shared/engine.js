@@ -47,13 +47,15 @@ export const DEFAULTS = Object.freeze({
   collisionRadius: 9, threshold: 0.9, force: 0.18,
   damping: 0.965, repel: 0.63, maxSpeed: 7,
   changeMode: 'swap', trails: false, glow: true,
-  rgbMutationEnabled: true, forceNormalization: 'none'
+  rgbMutationEnabled: true, forceNormalization: 'sqrt', repulsionProfile: 'steep'
 });
 
 export class ParticleLife {
   constructor(width, height, variant = 'collision', settings = {}) {
     this.variant = variant;
-    this.options = { ...DEFAULTS, ...settings };
+    this.options = { ...DEFAULTS,
+      ...(variant === 'classic' ? { forceNormalization: 'none', repulsionProfile: 'linear' } : {}),
+      ...settings };
     this.resize(width, height, false);
     this.reset();
   }
@@ -216,7 +218,12 @@ export class ParticleLife {
       this.neighborCounts[i]++;
       this.neighborCounts[j]++;
       const d = Math.sqrt(d2), ux = dx / d, uy = dy / d;
-      const repelForce = -repel * (1 - d / minDist);
+      const compression = Math.max(0, 1 - d / minDist);
+      // Calibrated hardening profile: retains the original force at the edge
+      // while increasing resistance to deep overlap. Linear is reproducible.
+      const repelForce = -repel * compression * (
+        this.options.repulsionProfile === 'steep' ? 1 + 1.5 * compression : 1
+      );
       const kernel = Math.sin(Math.PI * clamp((d - minDist) / (radius - minDist), 0, 1));
       const fi = d < minDist ? repelForce : force * this.affinity(i, j) * kernel;
       const fj = d < minDist ? repelForce : force * this.affinity(j, i) * kernel;
@@ -246,31 +253,41 @@ export class ParticleLife {
     }
     if (this.variant === 'collision') {
       const nextContacts = new Set(), rearm = hit * 1.55;
+      // Positions before and after integration are used to detect a swept
+      // virtual contact. Relative velocity is projected on the approach axis;
+      // tangential motion cannot generate artificial collision energy.
       this.forPairs((i, j) => {
         const dx = delta(this.x[j] - this.x[i], this.width);
         const dy = delta(this.y[j] - this.y[i], this.height);
         const d2 = dx * dx + dy * dy;
-        if (d2 >= rearm * rearm) return;
         const key = i * this.n + j;
-        const touching = d2 <= hit * hit;
-        if (touching) {
-          if (!this.contacts.has(key)) {
-            const oldDx = delta(oldX[j] - oldX[i], this.width);
-            const oldDy = delta(oldY[j] - oldY[i], this.height);
-            const previousDistance = Math.hypot(oldDx, oldDy);
-            const approach = Math.max(0, (previousDistance - Math.sqrt(d2)) / h);
-            if (previousDistance > hit && approach > 0) {
-              this.collisions++;
-              // Equal masses: reduced-mass energy = approach^2 / 4.
-              const energy = approach * approach / 4;
-              if (this.options.rgbMutationEnabled && energy >= threshold && this.mutate(i, j)) this.mutations++;
-            }
-          }
-          nextContacts.add(key);
-        } else if (this.contacts.has(key)) {
-          // Do not re-trigger on tiny oscillations around the collision boundary.
-          nextContacts.add(key);
+        if (this.contacts.has(key)) {
+          if (d2 < rearm * rearm) nextContacts.add(key);
+          return;
         }
+        const ox = delta(oldX[j] - oldX[i], this.width);
+        const oy = delta(oldY[j] - oldY[i], this.height);
+        const oldD2 = ox * ox + oy * oy;
+        if (oldD2 <= hit * hit || oldD2 < 1e-8) {
+          if (d2 <= hit * hit) nextContacts.add(key);
+          return;
+        }
+        const rvx = this.vx[j] - this.vx[i];
+        const rvy = this.vy[j] - this.vy[i];
+        const closing = Math.max(0, -(rvx * ox + rvy * oy) / Math.sqrt(oldD2));
+        if (closing <= 0) return;
+        const sx = rvx * h, sy = rvy * h;
+        const path2 = sx * sx + sy * sy;
+        if (path2 < 1e-9) return;
+        const t = clamp(-(ox * sx + oy * sy) / path2, 0, 1);
+        const nearX = ox + sx * t, nearY = oy + sy * t;
+        if (nearX * nearX + nearY * nearY > hit * hit) return;
+        this.collisions++;
+        const energy = closing * closing / 4; // equal-mass reduced energy
+        if (this.options.rgbMutationEnabled && energy >= threshold && this.mutate(i, j)) {
+          this.mutations++;
+        }
+        if (d2 < rearm * rearm) nextContacts.add(key);
       });
       this.contacts = nextContacts;
     }
