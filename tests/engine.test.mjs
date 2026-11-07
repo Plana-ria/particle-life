@@ -55,3 +55,33 @@ test('classic rules never change the particle colors', () => {
   assert.deepEqual([...p.r], before);
   assert.equal(p.mutations, 0);
 });
+
+test('nonlinear RGB interaction is bounded and directed', () => {
+  const p = new ParticleLife(300, 200, 'collision', { count: 2, levels: 4 });
+  p.r.set([0, 3]); p.g.set([0, 3]); p.b.set([0, 3]);
+  const ab = p.affinity(0, 1), ba = p.affinity(1, 0);
+  assert.ok(Math.abs(ab) <= 1 && Math.abs(ba) <= 1);
+  assert.notEqual(ab, ba, 'directed RGB interactions should differ');
+});
+test('white and black are not both mutually self-attracting', () => {
+  const p = new ParticleLife(300, 200, 'collision', { count: 2, levels: 4 });
+  p.r.set([0, 3]); p.g.set([0, 3]); p.b.set([0, 3]);
+  const blackSelf = p.affinity(0, 0);
+  const whiteSelf = p.affinity(1, 1);
+  assert.ok(blackSelf < 0 || whiteSelf < 0);
+});
+test('nonlinear affinities include positive and negative responses for every RGB level count', () => {
+  for (const levels of [3, 4, 8, 16]) {
+    const p = new ParticleLife(300, 200, 'collision', { count: 2, levels });
+    const samples = [];
+    for (let r = 0; r < levels; r++) {
+      p.r[0] = r; p.g[0] = (r + 1) % levels; p.b[0] = (r + 2) % levels;
+      for (let g = 0; g < levels; g++) {
+        p.r[1] = (g + 1) % levels; p.g[1] = g; p.b[1] = (g + 2) % levels;
+        samples.push(p.affinity(0, 1));
+      }
+    }
+    assert.ok(samples.some(x => x > .1), 'no attractive pair: ' + levels);
+    assert.ok(samples.some(x => x < -.1), 'no repulsive pair: ' + levels);
+  }
+});

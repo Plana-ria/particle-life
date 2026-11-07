@@ -1,4 +1,4 @@
-import { ParticleLife, DEFAULTS } from './engine.js?v=20261108-zoom-fix-1';
+import { ParticleLife, DEFAULTS } from './engine.js?v=20261108-rgb-nonlinear-1';
 import { Camera } from './camera.js?v=20261108-zoom-fix-1';
 
 const canvas = document.getElementById('world');

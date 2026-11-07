@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#090e1b"><meta name="description" content="RGB各4段階・64色から開始。色で引力・斥力が決まり、接近方向の相対運動エネルギーが閾値を超えた衝突時にRGBの1成分を交換します。">
+<meta name="theme-color" content="#090e1b"><meta name="description" content="RGB各4段階・64色から開始。RGBの非線形な固定関数で引力・斥力が決まり、接近方向の相対運動エネルギーが閾値を超えた衝突時にRGBの1成分を交換します。">
 <title>RGB Collision Life | Particle Life Lab</title><link rel="stylesheet" href="../../shared/styles.css?v=20261108-zoom-fix-1"></head>
 <body data-variant="collision" data-change-mode="swap">
 <div class="layout">
@@ -37,9 +37,9 @@
 <div class="stat"><div class="stat-label" id="stat-events-label">RGB変化回数</div><div class="stat-value" id="stat-events">—</div></div>
 <div class="stat"><div class="stat-label">平均速度</div><div class="stat-value" id="stat-speed">—</div></div>
 <div class="stat"><div class="stat-label">描画FPS</div><div class="stat-value" id="stat-fps">—</div></div>
-</div><section class="explainer"><h2>RGB衝突ルール</h2><p>粒子の色は内部的に <code>(R,G,B) ∈ {0,1,2,3}³</code>（初期設定）として保持し、表示時のみ0〜255へ変換します。同じRGBなら相互作用関数も同じです。関数自体が時間で変化することはありません。</p><p>衝突半径への新規進入で接近速度 <code>u = max(0, (前フレーム距離 − 現在距離) / Δt)</code> を求め、等質量の換算質量で <code>E = u² / 4</code> と定義します。<code>E ≥ 閾値</code> のときだけ、2粒子のRGBから決まる1成分を交換します。接触中は再発火せず、1.55倍の距離まで離れると再判定可能になります。</p><p>成分交換は粒子全体でR・G・Bそれぞれの値の分布を保存し、単純な色の平均化や一方向の白化を防ぎます。発光は見た目のみで、運動や衝突には影響しません。</p></section></main>
+</div><section class="explainer"><h2>RGB衝突ルール</h2><p>粒子の色は内部的に <code>(R,G,B) ∈ {0,1,2,3}³</code>（初期設定）として保持し、表示時のみ0〜255へ変換します。同じRGBなら相互作用関数も同じです。現在はRGB成分間の周期的な非線形関数で引力・斥力を計算します。関数自体は時間で変化しません。</p><p>衝突半径への新規進入で接近速度 <code>u = max(0, (前フレーム距離 − 現在距離) / Δt)</code> を求め、等質量の換算質量で <code>E = u² / 4</code> と定義します。<code>E ≥ 閾値</code> のときだけ、2粒子のRGBから決まる1成分を交換します。接触中は再発火せず、1.55倍の距離まで離れると再判定可能になります。</p><p>成分交換は粒子全体でR・G・Bそれぞれの値の分布を保存し、単純な色の平均化や一方向の白化を防ぎます。発光は見た目のみで、運動や衝突には影響しません。</p></section></main>
 <footer class="footer">Particle Life Lab · <a class="inline-link" href="../../">他のルールを見る</a> · <a class="inline-link" href="https://github.com/Plana-ria/particle-life">Source on GitHub</a></footer>
-</div><script type="module" src="../../shared/app.js?v=20261108-zoom-fix-1"></script><script>
+</div><script type="module" src="../../shared/app.js?v=20261108-rgb-nonlinear-1"></script><script>
 window.addEventListener('error', event => {
   if (event.target && event.target.tagName === 'SCRIPT') {
     const status = document.getElementById('status');

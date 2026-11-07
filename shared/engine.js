@@ -11,11 +11,27 @@ const MATRIX = [
   [-.62,  .50, -.26,  .55,  .42,  .58 ],
   [ .45,  .53, -.57, -.34,  .62,  .48 ]
 ];
-const W = [
-  [.36, -.85, .93],
-  [.73,  .34, -.70],
-  [-.88, .72, .37]
-];
+// Fixed non-linear RGB interaction: cyclic channel coupling and periodic phases.
+// Avoid the previous bilinear RGB rule that favored black/white self-attraction.
+// The fixed function is unchanged across time; only individual RGB values mutate.
+function createRgbInteraction(levels) {
+  const phase = 2 * Math.PI / levels;
+  const pairs = Array.from({ length: 3 }, () => new Float32Array(levels * levels));
+  const triple = new Float32Array(levels * levels * levels);
+  for (let a = 0; a < levels; a++) {
+    for (let b = 0; b < levels; b++) {
+      const idx = a * levels + b;
+      pairs[0][idx] = .43 * Math.sin(phase * (a + 2 * b) + .31);
+      pairs[1][idx] = .39 * Math.sin(phase * (a + 2 * b) + 1.71);
+      pairs[2][idx] = .41 * Math.sin(phase * (a + 2 * b) + 2.83);
+      for (let c = 0; c < levels; c++) {
+        triple[(a * levels + b) * levels + c] =
+          .30 * Math.cos(phase * (a + b + c) + .97);
+      }
+    }
+  }
+  return { pairs, triple, levels };
+}
 function rng(seed) {
   let a = seed >>> 0;
   return () => {
@@ -80,6 +96,7 @@ export class ParticleLife {
       this.b[i] = Math.floor(random() * c.levels);
     }
     this.colorCache = new Map();
+    this.rgbInteraction = createRgbInteraction(c.levels);
   }
   color(i) {
     if (this.variant === 'classic') return palette[this.species[i]];
@@ -95,15 +112,14 @@ export class ParticleLife {
   }
   affinity(i, j) {
     if (this.variant === 'classic') return MATRIX[this.species[i]][this.species[j]];
-    // A fixed, non-symmetric function of RGB; there is no time-varying rule table.
-    const levels = this.options.levels - 1;
-    const a = [2 * this.r[i] / levels - 1, 2 * this.g[i] / levels - 1, 2 * this.b[i] / levels - 1];
-    const b = [2 * this.r[j] / levels - 1, 2 * this.g[j] / levels - 1, 2 * this.b[j] / levels - 1];
-    let z = .12;
-    for (let k = 0; k < 3; k++) {
-      for (let t = 0; t < 3; t++) z += a[k] * W[k][t] * b[t];
-    }
-    return Math.tanh(1.5 * z);
+    // Periodic, non-symmetric RGB mixing (non-linear even before tanh).
+    // The lookup tables depend on the fixed RGB quantization, not on time.
+    const { levels: n, pairs, triple } = this.rgbInteraction;
+    const z = pairs[0][this.r[i] * n + this.g[j]]
+      + pairs[1][this.g[i] * n + this.b[j]]
+      + pairs[2][this.b[i] * n + this.r[j]]
+      + triple[(this.r[i] * n + this.g[i]) * n + this.b[j]];
+    return Math.tanh(1.15 * z);
   }
   makeGrid() {
     const radius = this.options.interactionRadius;
